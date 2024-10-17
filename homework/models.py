@@ -27,7 +27,7 @@ class Classifier(nn.Module):
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
 
         # TODO: implement
-        # Testing github save
+        # conv
         pass
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
