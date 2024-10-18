@@ -14,8 +14,8 @@ def train_classification(
         model_name: str = "classification",
         num_epoch: int = 50,
         # Learning rate for the optimizer
-        lr: float = 0.001,
-        batch_size: int = 128,
+        lr: float = 0.01,
+        batch_size: int = 256,
         # Random seed for reproducibility
         seed: int = 2024,
         # Additional keyword arguments to pass to the model (optimizer, decay, etc.)
@@ -42,12 +42,12 @@ def train_classification(
     model.train()
 
     # Load the data; can use SuperTuxDataset from classification dataset module to augment data
-    train_data = load_data("classification_data/train", shuffle=True, batch_size=batch_size, num_workers=1)
-    val_data=load_data("classification_data/val", shuffle=False)
+    train_data = load_data("classification_data/train", shuffle=True, batch_size=batch_size, num_workers=2)
+    val_data=load_data("classification_data/val", shuffle=False, num_workers=2)
 
     # Create loss function and optimizer; can add momentum, weight decay, etc.
     loss_func = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
     # Used to keep track of the x axis in tensorboard plot
     global_step = 0
