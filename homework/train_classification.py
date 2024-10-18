@@ -42,7 +42,7 @@ def train_classification(
     model.train()
 
     # Load the data; can use SuperTuxDataset from classification dataset module to augment data
-    train_data = load_data("classification_data/train", shuffle=True, batch_size=batch_size, num_workers=2)
+    train_data = load_data("classification_data/train", shuffle=True, batch_size=batch_size, num_workers=1)
     val_data=load_data("classification_data/val", shuffle=False)
 
     # Create loss function and optimizer; can add momentum, weight decay, etc.
@@ -128,16 +128,16 @@ def train_classification(
         if epoch == 0 or epoch == num_epoch - 1 or (epoch + 1) % 10 == 0:
             print(
                 f"Epoch {epoch + 1:2d} / {num_epoch:2d}: "
-                f"train_acc={epoch_train_acc:.4f} "
+                f"train_acc={epoch_train_acc:.4f}"
                 f"val_acc={epoch_val_acc:.4f}"
             )
 
-    # Save and overwrite the model in the root directory
-    save_model(model)
+        # Save and overwrite the model in the root directory
+        save_model(model)
 
-    # Save a copy of model weights in the log directory
-    torch.save(model.state_dict(), log_dir / f"{model_name}.th")
-    print(f"Model saved to {log_dir / f'{model_name}.th'}")
+        # Save a copy of model weights in the log directory
+        torch.save(model.state_dict(), log_dir / f"{model_name}.th")
+        print(f"Model saved to {log_dir / f'{model_name}.th'}")
 
 if __name__ == "__main__":
     # Define the arguments for the train_classification function
