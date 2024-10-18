@@ -9,10 +9,21 @@ INPUT_STD = [0.2064, 0.1944, 0.2252]
 
 
 class Classifier(nn.Module):
+
+    class Block(torch.nn.Module):
+        def __init__(self, in_channels, out_channels, stride):
+            super().__init__()
+            kernel_size = 3
+            padding = (kernel_size - 1) // 2
+            self.conv = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+            self.relu = torch.nn.ReLU()
+
     def __init__(
         self,
         in_channels: int = 3,
+        channels_l0 = 64,
         num_classes: int = 6,
+        n_blocks = 4,
     ):
         """
         A convolutional network for image classification.
@@ -27,8 +38,17 @@ class Classifier(nn.Module):
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
 
         # TODO: implement
-        # conv
-        pass
+        cnn_layers = [
+            torch.nn.Conv2d(3, channels_l0, kernel_size=11, stride=2, padding=5),
+            torch.nn.ReLU(),
+        ]
+        c1 = channels_l0
+        for _ in range(n_blocks):
+            c2 = c1
+            cnn_layers.append(self.Block(c1, c2, stride=1))
+            c1 = c2
+        cnn_layers.append(torch.nn.Conv2d(c1, 1, kernel_size=1))
+        self.cnn = torch.nn.Sequential(*cnn_layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -42,9 +62,10 @@ class Classifier(nn.Module):
         z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None]
 
         # TODO: replace with actual forward pass
-        logits = torch.randn(x.size(0), 6)
+        return self.cnn(z)
+        # logits = torch.randn(x.size(0), 6)
 
-        return logits
+        # return logits
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         """
