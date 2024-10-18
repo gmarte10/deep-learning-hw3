@@ -1,4 +1,5 @@
 import torch
+import argparse
 import torch.utils.tensorboard as tb
 import numpy as np
 from pathlib import Path
@@ -108,6 +109,32 @@ def train_classification(
         logger.add_scalar("train_accuracy", epoch_train_acc, global_step)
         logger.add_scalar("validation_accuracy", epoch_val_acc, global_step)
 
+        # Print on first, last and every 10th epoch
+        if epoch == 0 or epoch == num_epoch - 1 or (epoch + 1) % 10 == 0:
+            print(
+                f"Epoch {epoch + 1:2d } / {num_epoch}: "
+                f"train_acc = {epoch_train_acc:.4f}"
+                f"val_acc = {epoch_val_acc:.4f}"
+            )
+
+        # Save and overwrite the model in the root directory
+        save_model(model)
+
+        # Save a copy of model weights in the log directory
+        torch.save(model.state_dict(), log_dir / f"{model_name}.th")
+        print(f"Model saved to {log_dir / f'{model_name}.th'}")
+
+if __name__ == "__main__":
+    # Define the arguments for the train_classification function
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--exp_dir", type=str, default="logs")
+    parser.add_argument("--model_name", type=str, required=True)
+    parser.add_argument("--num_epoch", type=int, default=50)
+    parser.add_argument("--lr", type=float, default=0.001)
+    parser.add_argument("--seed", type=int, default=2024)
+
+    # Pass all arguments to train_classification
+    train_classification(**vars(parser.parse_args()))
 
 
 
