@@ -62,10 +62,10 @@ class Classifier(nn.Module):
             tensor (b, num_classes) logits
         """
         # optional: normalizes the input
-        z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None]
+        # z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None]
 
         # TODO: replace with actual forward pass
-        return self.cnn(z)
+        return self.cnn(x)
         # logits = torch.randn(x.size(0), 6)
 
         # return logits
