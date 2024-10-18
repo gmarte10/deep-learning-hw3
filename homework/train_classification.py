@@ -102,8 +102,11 @@ def train_classification(
             acc_storage["validation_accuracy"].append(acc_metric.compute())
         
         # Get the mean training and validation accuracy for the epoch
-        epoch_train_acc = torch.tensor(acc_storage["train_accuracy"]).float().mean()
-        epoch_val_acc = torch.tensor(acc_storage["validation_accuracy"]).float().mean()
+        train_acc_list = [torch.tensor(acc).float() for acc in acc_storage["train_accuracy"]]
+        val_acc_list = [torch.tensor(acc).float() for acc in acc_storage["validation_accuracy"]]
+
+        epoch_train_acc = torch.stack(train_acc_list).mean()
+        epoch_val_acc = torch.stack(val_acc_list).mean()
 
         # Log the training and validation accuracy
         logger.add_scalar("train_accuracy", epoch_train_acc, global_step)
