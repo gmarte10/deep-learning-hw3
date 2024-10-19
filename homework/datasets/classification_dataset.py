@@ -41,8 +41,8 @@ class SuperTuxDataset(Dataset):
                 [
                     transforms.RandomResizedCrop(size=(64, 64), antialias=True),
                     transforms.RandomHorizontalFlip(),
-                    transforms.RandomRotation(degrees=15),
-                    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+                    transforms.RandomRotation(degrees=15), # AI, Added random rotation
+                    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1), # AI, Added color jitter
                     transforms.ToTensor(),
                 ]
             )

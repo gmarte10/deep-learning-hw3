@@ -15,27 +15,26 @@ class Classifier(nn.Module):
             super().__init__()
             kernel_size = 3
             padding = (kernel_size - 1) // 2
-            self.conv1 = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
-            self.n1 = torch.nn.GroupNorm(1, out_channels)
-            self.conv2 = torch.nn.Conv2d(out_channels, out_channels, kernel_size, 1, padding)
-            self.n2 = torch.nn.GroupNorm(1, out_channels)
+            self.c1 = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+            self.bn1 = torch.nn.BatchNorm2d(out_channels) # AI, I was using GroupNorm before
+            self.c2 = torch.nn.Conv2d(out_channels, out_channels, kernel_size, 1, padding)
+            self.bn2 = torch.nn.BatchNorm2d(out_channels)
             self.relu = torch.nn.ReLU()
-            self.dropout = torch.nn.Dropout(0.3)
             self.skip = torch.nn.Conv2d(in_channels, out_channels, 1, stride, 0) if in_channels != out_channels else torch.nn.Identity()
+            self.dropout = torch.nn.Dropout(0.3) # AI, Didn't have dropout before
         
         def forward(self, x):
-            x1 = self.relu(self.n1(self.conv1(x)))
-            x1 = self.relu(self.n2(self.conv2(x1)))
-            x1 = self.dropout(x1)
-            return self.skip(x) + x1
+            res = self.skip(x) # AI, had it in return statement before
+            x = self.relu(self.bn1(self.c1(x)))
+            x = self.relu(self.bn2(self.c2(x)))
+            x = self.dropout(x) # AI, Didn't have dropout before
+            return self.relu(x + res)
         
     
     def __init__(
         self,
         in_channels: int = 3,
-        channels_l0 = 128,
         num_classes: int = 6,
-        n_blocks = 2,
     ):
         """
         A convolutional network for image classification.
@@ -50,8 +49,11 @@ class Classifier(nn.Module):
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
 
         # TODO: implement
+        channels_l0 = 64
+        n_blocks = 3
+
         cnn_layers = [
-            torch.nn.Conv2d(in_channels, channels_l0, kernel_size=5, stride=2, padding=3),
+            torch.nn.Conv2d(in_channels, channels_l0, kernel_size=7, stride=2, padding=3),
             torch.nn.BatchNorm2d(channels_l0),
             torch.nn.ReLU(),
         ]
@@ -61,7 +63,6 @@ class Classifier(nn.Module):
             cnn_layers.append(self.Block(c1, c2, stride=2))
             c1 = c2
         cnn_layers.append(torch.nn.Conv2d(c1, num_classes, kernel_size=1))
-        cnn_layers.append(torch.nn.Dropout(0.3))
         self.cnn = torch.nn.Sequential(*cnn_layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
