@@ -15,12 +15,16 @@ class Classifier(nn.Module):
             super().__init__()
             kernel_size = 3
             padding = (kernel_size - 1) // 2
-            self.conv = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+            self.conv1 = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+            self.n1 = torch.nn.GroupNorm(1, out_channels)
+            self.conv2 = torch.nn.Conv2d(out_channels, out_channels, kernel_size, 1, padding)
+            self.n2 = torch.nn.GroupNorm(1, out_channels)
             self.relu = torch.nn.ReLU()
             self.skip = torch.nn.Conv2d(in_channels, out_channels, 1, stride, 0) if in_channels != out_channels else torch.nn.Identity()
         
         def forward(self, x):
-            x1 = self.relu(self.conv(x))
+            x1 = self.relu(self.n1(self.conv1(x)))
+            x1 = self.relu(self.n2(self.conv2(x1)))
             return self.skip(x) + x1
 
     def __init__(
@@ -28,7 +32,7 @@ class Classifier(nn.Module):
         in_channels: int = 3,
         channels_l0 = 64,
         num_classes: int = 6,
-        n_blocks = 2,
+        n_blocks = 1,
     ):
         """
         A convolutional network for image classification.
@@ -45,7 +49,7 @@ class Classifier(nn.Module):
         # TODO: implement
         cnn_layers = [
             torch.nn.Conv2d(in_channels, channels_l0, kernel_size=11, stride=2, padding=5),
-            torch.nn.BatchNorm2d(channels_l0),
+            # torch.nn.BatchNorm2d(channels_l0),
             torch.nn.ReLU(),
         ]
         c1 = channels_l0
