@@ -20,19 +20,22 @@ class Classifier(nn.Module):
             self.conv2 = torch.nn.Conv2d(out_channels, out_channels, kernel_size, 1, padding)
             self.n2 = torch.nn.GroupNorm(1, out_channels)
             self.relu = torch.nn.ReLU()
+            self.dropout = torch.nn.Dropout(0.3)
             self.skip = torch.nn.Conv2d(in_channels, out_channels, 1, stride, 0) if in_channels != out_channels else torch.nn.Identity()
         
         def forward(self, x):
             x1 = self.relu(self.n1(self.conv1(x)))
+            x1 = self.dropout(x1)
             x1 = self.relu(self.n2(self.conv2(x1)))
+            x1 = self.dropout(x1)
             return self.skip(x) + x1
 
     def __init__(
         self,
         in_channels: int = 3,
-        channels_l0 = 64,
+        channels_l0 = 128,
         num_classes: int = 6,
-        n_blocks = 1,
+        n_blocks = 3,
     ):
         """
         A convolutional network for image classification.
@@ -48,16 +51,18 @@ class Classifier(nn.Module):
 
         # TODO: implement
         cnn_layers = [
-            torch.nn.Conv2d(in_channels, channels_l0, kernel_size=11, stride=2, padding=5),
-            # torch.nn.BatchNorm2d(channels_l0),
+            torch.nn.Conv2d(in_channels, channels_l0, kernel_size=7, stride=2, padding=3),
+            torch.nn.BatchNorm2d(channels_l0),
             torch.nn.ReLU(),
         ]
         c1 = channels_l0
         for _ in range(n_blocks):
             c2 = c1 * 2
             cnn_layers.append(self.Block(c1, c2, stride=2))
+            cnn_layers.append(torch.nn.Dropout(0.3))
             c1 = c2
         cnn_layers.append(torch.nn.Conv2d(c1, num_classes, kernel_size=1))
+        cnn_layers.append(torch.nn.Dropout(0.3))
         self.cnn = torch.nn.Sequential(*cnn_layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

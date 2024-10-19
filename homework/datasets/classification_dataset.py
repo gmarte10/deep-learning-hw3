@@ -41,6 +41,7 @@ class SuperTuxDataset(Dataset):
                 [
                     transforms.RandomResizedCrop(size=(64, 64), antialias=True),
                     transforms.RandomHorizontalFlip(),
+                    transforms.RandomRotation(degrees=15),
                     transforms.ToTensor(),
                 ]
             )
