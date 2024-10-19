@@ -29,7 +29,8 @@ class Classifier(nn.Module):
             x1 = self.relu(self.n2(self.conv2(x1)))
             x1 = self.dropout(x1)
             return self.skip(x) + x1
-
+        
+    # changed block size
     def __init__(
         self,
         in_channels: int = 3,
