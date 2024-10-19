@@ -25,7 +25,6 @@ class Classifier(nn.Module):
         
         def forward(self, x):
             x1 = self.relu(self.n1(self.conv1(x)))
-            x1 = self.dropout(x1)
             x1 = self.relu(self.n2(self.conv2(x1)))
             x1 = self.dropout(x1)
             return self.skip(x) + x1
@@ -52,7 +51,7 @@ class Classifier(nn.Module):
 
         # TODO: implement
         cnn_layers = [
-            torch.nn.Conv2d(in_channels, channels_l0, kernel_size=7, stride=2, padding=3),
+            torch.nn.Conv2d(in_channels, channels_l0, kernel_size=5, stride=2, padding=3),
             torch.nn.BatchNorm2d(channels_l0),
             torch.nn.ReLU(),
         ]
@@ -60,7 +59,6 @@ class Classifier(nn.Module):
         for _ in range(n_blocks):
             c2 = c1 * 2
             cnn_layers.append(self.Block(c1, c2, stride=2))
-            cnn_layers.append(torch.nn.Dropout(0.3))
             c1 = c2
         cnn_layers.append(torch.nn.Conv2d(c1, num_classes, kernel_size=1))
         cnn_layers.append(torch.nn.Dropout(0.3))
