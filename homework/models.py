@@ -17,9 +17,11 @@ class Classifier(nn.Module):
             padding = (kernel_size - 1) // 2
             self.conv = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
             self.relu = torch.nn.ReLU()
+            self.skip = torch.nn.Conv2d(in_channels, out_channels, 1, stride, 0) if in_channels != out_channels else torch.nn.Identity()
         
         def forward(self, x):
-            return self.relu(self.conv(x))
+            x1 = self.relu(self.conv(x))
+            return self.skip(x) + x1
 
     def __init__(
         self,
@@ -42,7 +44,7 @@ class Classifier(nn.Module):
 
         # TODO: implement
         cnn_layers = [
-            torch.nn.Conv2d(3, channels_l0, kernel_size=11, stride=2, padding=5),
+            torch.nn.Conv2d(in_channels, channels_l0, kernel_size=11, stride=2, padding=5),
             torch.nn.BatchNorm2d(channels_l0),
             torch.nn.ReLU(),
         ]

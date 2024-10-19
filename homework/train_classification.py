@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 from datetime import datetime
 from .models import load_model, save_model
-from .datasets.classification_dataset import load_data
+from .datasets.classification_dataset import load_data, SuperTuxDataset
 from .metrics import AccuracyMetric
 
 def train_classification(
@@ -42,7 +42,7 @@ def train_classification(
     model.train()
 
     # Load the data; can use SuperTuxDataset from classification dataset module to augment data
-    train_data = load_data("classification_data/train", shuffle=True, batch_size=batch_size, num_workers=2)
+    train_data = load_data("classification_data/train", transform_pipeline = "aug", shuffle=True, batch_size=batch_size, num_workers=2)
     val_data=load_data("classification_data/val", shuffle=False, num_workers=2)
 
     # Create loss function and optimizer; can add momentum, weight decay, etc.
@@ -56,12 +56,12 @@ def train_classification(
     acc_metric = AccuracyMetric()
 
     for epoch in range(num_epoch):
+        # Set model to training mode
+        model.train()
+
         # Clear metrics storage at the start of each epoch
         for key in acc_storage:
             acc_storage[key].clear()
-
-        # Set model to training mode
-        model.train()
 
         # Reset metrics
         acc_metric.reset()
@@ -89,11 +89,11 @@ def train_classification(
 
         # Store the training accuracy
         acc_storage["train_accuracy"].append(acc_metric.compute())
-
+        
+        model.eval()
+        acc_metric.reset()
         # Disable gradient compution and switch to evaluation mode
         with torch.inference_mode():
-            model.eval()
-            acc_metric.reset()
             for img, label in val_data:
                 img, label = img.to(device), label.to(device)
                 pred = model(img)
