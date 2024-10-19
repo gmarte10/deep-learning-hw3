@@ -43,12 +43,13 @@ class Classifier(nn.Module):
         # TODO: implement
         cnn_layers = [
             torch.nn.Conv2d(3, channels_l0, kernel_size=11, stride=2, padding=5),
+            torch.nn.BatchNorm2d(channels_l0),
             torch.nn.ReLU(),
         ]
         c1 = channels_l0
         for _ in range(n_blocks):
             c2 = c1 * 2
-            cnn_layers.append(self.Block(c1, c2, stride=1))
+            cnn_layers.append(self.Block(c1, c2, stride=2))
             c1 = c2
         cnn_layers.append(torch.nn.Conv2d(c1, num_classes, kernel_size=1))
         self.cnn = torch.nn.Sequential(*cnn_layers)
