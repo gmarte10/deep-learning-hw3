@@ -48,7 +48,7 @@ class Classifier(nn.Module):
         self.register_buffer("input_mean", torch.as_tensor(INPUT_MEAN))
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
 
-        # TODO: implement
+        # TODO: implement - saving
         channels_l0 = 64
         n_blocks = 3
 
