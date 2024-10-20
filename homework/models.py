@@ -49,7 +49,7 @@ class Classifier(nn.Module):
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
 
         # TODO: implement - saving
-        channels_l0 = 64
+        channels_l0 = 96
         n_blocks = 3
 
         cnn_layers = [
@@ -100,6 +100,7 @@ class Classifier(nn.Module):
 
 
 class Detector(torch.nn.Module):
+
     def __init__(
         self,
         in_channels: int = 3,
@@ -117,8 +118,13 @@ class Detector(torch.nn.Module):
         self.register_buffer("input_mean", torch.as_tensor(INPUT_MEAN))
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
 
-        # TODO: implement
-        pass
+        self.d1 = torch.nn.Conv2d(in_channels=in_channels, out_channels=16, kernel_size=3, stride=2, padding=1)
+        self.d2 = torch.nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=2, padding=1)
+        self.u1 = torch.nn.ConvTranspose2d(in_channels=32, out_channels=16, kernel_size=3, stride=2, padding=1, output_padding=1)
+        self.u2 = torch.nn.ConvTranspose2d(in_channels=16, out_channels=num_classes, kernel_size=3, stride=2, padding=1, output_padding=1)
+        self.segmentation_head = torch.nn.Conv2d(in_channels=16, out_channels=num_classes, kernel_size=1)
+        self.depth_head = torch.nn.Conv2d(in_channels=16, out_channels=1, kernel_size=1)
+
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
@@ -137,10 +143,13 @@ class Detector(torch.nn.Module):
         z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None]
 
         # TODO: replace with actual forward pass
-        logits = torch.randn(x.size(0), 3, x.size(2), x.size(3))
-        raw_depth = torch.rand(x.size(0), x.size(2), x.size(3))
-
-        return logits, raw_depth
+        z1 = torch.relu(self.d1(z))
+        z2 = torch.relu(self.d2(z1))
+        z = torch.relu(self.u1(z2))
+        z = torch.relu(self.u2(z))
+        segmentation_output = self.segmentation_head(z)
+        depth_output = self.depth_head(z1)
+        return segmentation_output, depth_output
 
     def predict(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
