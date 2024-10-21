@@ -164,11 +164,15 @@ class Detector(torch.nn.Module):
 
         z = self.u1(z2)
         print("Up1 shape:", z.shape)
-        segmentation_out = self.u2(z)
+
+        z = self.u2(z)
+        segmentation_out = z
         print("Up2 shape:", segmentation_out.shape)
 
-        depth_out = self.depth_head(z)
-
+        # Add a 1x1 convolution to reduce the channels for depth prediction
+        depth_out = torch.nn.functional.conv2d(z, self.depth_head.weight, self.depth_head.bias, stride=1, padding=0)
+        print("Depth shape:", depth_out.shape)
+        
         return segmentation_out, depth_out
 
 
