@@ -90,7 +90,7 @@ def train_detection(
             optimizer.step()
 
             _, seg_pred = torch.max(segmentation_pred, 1)
-            _, depth_pred = torch.max(depth_pred, 1)
+            depth_pred = depth_pred.squeeze(1)
 
             # Add metrics for current batch
             train_metrics.add(seg_pred, segmentation, depth_pred, depth)
@@ -129,6 +129,7 @@ def train_detection(
                 total_loss = seg_loss + d_loss
 
                 _, seg_pred = torch.max(segmentation_pred, 1)
+                depth_pred = depth_pred.squeeze(1)
 
                 val_metrics.add(seg_pred, segmentation, depth_pred, depth)
             val_epoch_metrics = val_metrics.compute()
