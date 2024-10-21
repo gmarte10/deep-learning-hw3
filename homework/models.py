@@ -165,6 +165,7 @@ class Detector(torch.nn.Module):
         z = self.u1(z2)
         print("Up1 shape:", z.shape)
         segmentation_out = self.u2(z)
+        print("Up2 shape:", segmentation_out.shape)
 
         depth_out = self.depth_head(z)
 

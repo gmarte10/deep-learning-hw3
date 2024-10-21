@@ -81,6 +81,10 @@ def train_detection(
             # Predict image label
             segmentation_pred, depth_pred = model(img)
 
+            print("Segmentation Pred Shape:", segmentation_pred.shape)
+            print("Depth Pred Shape:", depth_pred.shape)
+            print("Depth Target Shape:", depth.shape)
+
             # Compute loss value
             seg_loss = segmentation_loss(segmentation_pred, segmentation)
             d_loss = depth_loss(depth_pred.squeeze(1), depth)
@@ -132,7 +136,7 @@ def train_detection(
                 # depth_pred = depth_pred.squeeze(1)
 
                 val_metrics.add(seg_pred, segmentation, depth_pred, depth)
-                
+
             val_epoch_metrics = val_metrics.compute()
             metrics["val"]["total_loss"].append(total_loss.item())
             metrics["val"]["iou"].append(val_epoch_metrics["iou"])
