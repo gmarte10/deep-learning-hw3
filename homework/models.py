@@ -146,9 +146,10 @@ class Detector(torch.nn.Module):
         z1 = torch.relu(self.d1(z))
         z2 = torch.relu(self.d2(z1))
         z = torch.relu(self.u1(z2))
+        z = torch.relu(self.u2(z))
 
         segmentation_output = self.segmentation_head(z)
-        depth_output = self.depth_head(z1)
+        depth_output = self.depth_head(z)
         return segmentation_output, depth_output
 
     def predict(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
