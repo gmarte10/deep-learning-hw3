@@ -129,13 +129,15 @@ class Detector(torch.nn.Module):
     def down_block(self, in_channels, out_channels):
         return torch.nn.Sequential(
             torch.nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1),
-            torch.nn.ReLU(),
+            torch.nn.ReLU(inplace=True),
+            torch.nn.BatchNorm2d(out_channels)
         )
     
     def up_block(self, in_channels, out_channels):
         return torch.nn.Sequential(
             torch.nn.ConvTranspose2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, output_padding=1),
-            torch.nn.ReLU(),
+            torch.nn.ReLU(inplace=True),
+            torch.nn.BatchNorm2d(out_channels)
         )
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
