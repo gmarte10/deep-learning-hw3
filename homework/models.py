@@ -151,7 +151,6 @@ class Detector(torch.nn.Module):
                 - depth (b, h, w)
         """
         # optional: normalizes the input
-        print("Input shape:", x.shape)
         z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None] # (B, 3, 96, 128)
 
         # Downsample (encoder)
