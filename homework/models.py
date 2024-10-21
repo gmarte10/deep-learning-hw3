@@ -117,29 +117,26 @@ class Detector(torch.nn.Module):
 
         self.register_buffer("input_mean", torch.as_tensor(INPUT_MEAN))
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
+        
+        self.d1 = self.down_block(in_channels, 16)
+        self.d2 = self.down_block(16, 32)
 
-        self.conv1 = torch.nn.Conv2d(in_channels, 16, kernel_size=3, stride=2, padding=1)
-        self.relu1 = torch.nn.ReLU()
+        self.u1 = self.up_block(32, 16)
+        self.u2 = self.up_block(16, num_classes)
 
-        self.conv2 = torch.nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1)
-        self.relu2 = torch.nn.ReLU()
+        self.depth_head = torch.nn.Conv2d(16, 1, kernel_size=1)
 
-        self.upconv1 = torch.nn.ConvTranspose2d(32, 16, kernel_size=3, stride=2, padding=1, output_padding=1)
-        self.relu3 = torch.nn.ReLU()
-
-        self.upconv2 = torch.nn.ConvTranspose2d(16, num_classes, kernel_size=3, stride=2, padding=1, output_padding=1)
-
-        self.depth_conv = torch.nn.Conv2d(16, 1, kernel_size=1)
-
-        # self.d1 = torch.nn.Conv2d(in_channels=in_channels, out_channels=16, kernel_size=3, stride=2, padding=1)
-        # self.d2 = torch.nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=2, padding=1)
-
-        # self.u1 = torch.nn.ConvTranspose2d(in_channels=32, out_channels=16, kernel_size=3, stride=2, padding=1, output_padding=1)
-        # self.u2 = torch.nn.ConvTranspose2d(in_channels=16, out_channels=num_classes, kernel_size=3, stride=2, padding=1, output_padding=1)
-        # self.segmentation_head = torch.nn.Conv2d(in_channels=16, out_channels=num_classes, kernel_size=1)
-        # self.depth_head = torch.nn.Conv2d(in_channels=16, out_channels=1, kernel_size=1)
-
-
+    def down_block(self, in_channels, out_channels):
+        return torch.nn.Sequential(
+            torch.nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1),
+            torch.nn.ReLU(),
+        )
+    
+    def up_block(self, in_channels, out_channels):
+        return torch.nn.Sequential(
+            torch.nn.ConvTranspose2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, output_padding=1),
+            torch.nn.ReLU(),
+        )
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Used in training, takes an image and returns raw logits and raw depth.
@@ -156,31 +153,21 @@ class Detector(torch.nn.Module):
         # optional: normalizes the input
         print("Input shape:", x.shape)
         z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None]
-        z1 = self.relu1(self.conv1(z))
-        print("Shape after conv1:", z1.shape)
-        z2 = self.relu2(self.conv2(z1))
+        print("Normalized shape:", z.shape)
 
-        # upsampling
-        z = self.relu3(self.upconv1(z2))
-        print("Shape after upconv1:", z.shape)
+        z1 = self.d1(z)
+        print("Down1 shape:", z1.shape)
+        z2 = self.d2(z1)
+        print("Down2 shape:", z2.shape)
 
-        segmentation_output = self.upconv2(z)
-        depth_output = self.depth_conv(z1)
-        return segmentation_output, depth_output
+        z = self.u1(z2)
+        print("Up1 shape:", z.shape)
+        segmentation_out = self.u2(z)
 
-        # # TODO: replace with actual forward pass
-        # z1 = torch.relu(self.d1(z))
-        # print("Shape after d1:", z1.shape)
-        # z2 = torch.relu(self.d2(z1))
-        # print("Shape after d2:", z2.shape)
-        # z = torch.relu(self.u1(z2))
-        # print("Shape after u1:", z.shape)
-        # # z = torch.relu(self.u2(z))
-        # # print("Shape after u2:", z.shape)
+        depth_out = self.depth_head(z)
 
-        # segmentation_output = self.segmentation_head(z)
-        # depth_output = self.depth_head(z1)
-        # return segmentation_output, depth_output
+        return segmentation_out, depth_out
+
 
     def predict(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
