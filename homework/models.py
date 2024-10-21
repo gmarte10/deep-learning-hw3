@@ -150,11 +150,11 @@ class Detector(torch.nn.Module):
         print("Shape after d2:", z2.shape)
         z = torch.relu(self.u1(z2))
         print("Shape after u1:", z.shape)
-        z = torch.relu(self.u2(z))
-        print("Shape after u2:", z.shape)
+        # z = torch.relu(self.u2(z))
+        # print("Shape after u2:", z.shape)
 
         segmentation_output = self.segmentation_head(z)
-        depth_output = self.depth_head(z)
+        depth_output = self.depth_head(z1)
         return segmentation_output, depth_output
 
     def predict(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
