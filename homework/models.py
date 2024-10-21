@@ -141,21 +141,22 @@ class Detector(torch.nn.Module):
         """
         # optional: normalizes the input
         print("Input shape:", x.shape)
-        z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None]
+        # z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None]
 
-        # TODO: replace with actual forward pass
-        z1 = torch.relu(self.d1(z))
-        print("Shape after d1:", z1.shape)
-        z2 = torch.relu(self.d2(z1))
-        print("Shape after d2:", z2.shape)
-        z = torch.relu(self.u1(z2))
-        print("Shape after u1:", z.shape)
-        z = torch.relu(self.u2(z))
-        print("Shape after u2:", z.shape)
+        # # TODO: replace with actual forward pass
+        # z1 = torch.relu(self.d1(z))
+        # print("Shape after d1:", z1.shape)
+        # z2 = torch.relu(self.d2(z1))
+        # print("Shape after d2:", z2.shape)
+        # z = torch.relu(self.u1(z2))
+        # print("Shape after u1:", z.shape)
+        # z = torch.relu(self.u2(z))
+        # print("Shape after u2:", z.shape)
 
-        segmentation_output = self.segmentation_head(z)
-        depth_output = self.depth_head(z)
-        return segmentation_output, depth_output
+        # segmentation_output = self.segmentation_head(z)
+        # depth_output = self.depth_head(z)
+        # return segmentation_output, depth_output
+        return x, x
 
     def predict(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
