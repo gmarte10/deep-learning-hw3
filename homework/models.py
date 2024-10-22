@@ -106,11 +106,15 @@ class Detector(torch.nn.Module):
             super().__init__()
             self.c1 = torch.nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1)
             self.bn1 = torch.nn.BatchNorm2d(out_channels)
-            self.relu = torch.nn.ReLU()
+            self.relu1 = torch.nn.ReLU()
+            self.c2 = torch.nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+            self.bn2 = torch.nn.BatchNorm2d(out_channels)
+            self.relu2 = torch.nn.ReLU()
             self.dropout = torch.nn.Dropout(0.3)
 
         def forward(self, x):
-            x = self.relu(self.bn1(self.c1(x)))
+            x = self.relu1(self.bn1(self.c1(x)))
+            x = self.relu2(self.bn2(self.c2(x)))
             # x = self.dropout(x)
             return x
         
@@ -119,11 +123,15 @@ class Detector(torch.nn.Module):
             super().__init__()
             self.ct1 = torch.nn.ConvTranspose2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, output_padding=1)
             self.bn1 = torch.nn.BatchNorm2d(out_channels)
-            self.relu = torch.nn.ReLU()
-            self.dropout = torch.nn.Dropout(0.3)
+            self.relu1 = torch.nn.ReLU()
+            self.c2 = torch.nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+            self.bn2 = torch.nn.BatchNorm2d(out_channels)
+            self.relu2 = torch.nn.ReLU()
+            # self.dropout = torch.nn.Dropout(0.3)
 
         def forward(self, x):
-            x = self.relu(self.bn1(self.ct1(x)))
+            x = self.relu1(self.bn1(self.ct1(x)))
+            x = self.relu2(self.bn2(self.c2(x)))
             # x = self.dropout(x)
             return x
 
