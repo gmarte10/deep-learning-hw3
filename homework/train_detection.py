@@ -42,7 +42,7 @@ def train_detection(
     model.train()
 
     # Load the data; can use SuperTuxDataset from classification dataset module to augment data
-    train_data = load_data("road_data/train", shuffle=True, batch_size=batch_size, num_workers=2)
+    train_data = load_data("road_data/train", shuffle=True, transform_pipeline = "aug", batch_size=batch_size, num_workers=2)
     val_data = load_data("road_data/val", shuffle=False, num_workers=2)
 
     # Create loss function and optimizer; can add momentum, weight decay, etc.
