@@ -190,6 +190,7 @@ class Detector(torch.nn.Module):
         down2 = self.down2(down1) # (B, 32, 24, 32)
         down3 = self.down3(down2) # (B, 64, 12, 16)
         down4 = self.down4(down3) # (B, 128, 6, 8)
+        print(down4.shape)
 
         # Upsample (decoder)
         up1 = self.up1(down4) + self.skip4(down3) # (B, 64, 12, 16)
