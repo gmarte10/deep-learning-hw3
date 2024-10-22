@@ -117,6 +117,7 @@ class Detector(torch.nn.Module):
             self.ct1 = torch.nn.ConvTranspose2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, output_padding=1)
             self.bn1 = torch.nn.BatchNorm2d(out_channels)
             self.relu = torch.nn.ReLU()
+
         def forward(self, x):
             return self.relu(self.bn1(self.ct1(x)))
 
@@ -147,11 +148,13 @@ class Detector(torch.nn.Module):
         self.down1 = self.DownBlock(in_channels, 16) # Output: (B, 16, 48, 64)
         self.down2 = self.DownBlock(16, 32) # Output: (B, 32, 24, 32)
         self.down3 = self.DownBlock(32, 64) # Output: (B, 64, 12, 16)
+        self.donw4 = self.DownBlock(64, 128) # Output: (B, 128, 6, 8)
 
         # Upsampling path (decoder)
-        self.up1 = self.UpBlock(64, 32) # Output: (B, 32, 24, 32)
-        self.up2 = self.UpBlock(32, 16) # Output: (B, 16, 48, 64)
-        self.up3 = self.UpBlock(16, 16) # Output: (B, 16, 96, 128)
+        self.up1 = self.UpBlock(128, 64) # Output: (B, 64, 12, 16)
+        self.up2 = self.UpBlock(64, 32) # Output: (B, 32, 24, 32)
+        self.up3 = self.UpBlock(32, 16) # Output: (B, 16, 48, 64)
+        self.up4 = self.UpBlock(16, 16) # Output: (B, 16, 96, 128)
 
         # Segmentation head
         self.segmentation_head = torch.nn.Conv2d(16, num_classes, kernel_size=1) # Output: (B, num_classes, 96, 128)
@@ -159,10 +162,11 @@ class Detector(torch.nn.Module):
         # Depth head
         self.depth_head = torch.nn.Conv2d(16, 1, kernel_size=1) # Output: (B, 1, 96, 128)
 
-        # # Skip connections
-        # self.skip1 = torch.nn.Conv2d(16, 16, kernel_size=1)
-        # self.skip2 = torch.nn.Conv2d(32, 16, kernel_size=1)
-        # self.skip3 = torch.nn.Conv2d(64, 32, kernel_size=1)
+        # Skip connections
+        self.skip1 = torch.nn.Conv2d(16, 16, kernel_size=1)
+        self.skip2 = torch.nn.Conv2d(32, 32, kernel_size=1)
+        self.skip3 = torch.nn.Conv2d(64, 64, kernel_size=1)
+        self.skip4 = torch.nn.Conv2d(128, 128, kernel_size=1)
 
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
@@ -185,17 +189,23 @@ class Detector(torch.nn.Module):
         down1 = self.down1(z) # (B, 16, 48, 64)
         down2 = self.down2(down1) # (B, 32, 24, 32)
         down3 = self.down3(down2) # (B, 64, 12, 16)
+        down4 = self.down4(down3) # (B, 128, 6, 8)
 
         # Upsample (decoder)
-        up1 = self.up1(down3) # (B, 32, 24, 32)
-        up2 = self.up2(up1) # (B, 16, 48, 64)
-        up3 = self.up3(up2) # (B, 16, 96, 128)
+        up1 = self.up1(down4) + self.skip4(down3) # (B, 64, 12, 16)
+        up2 = self.up2(up1) + self.skip3(down2) # (B, 32, 24, 32)
+        up3 = self.up3(up2) + self.skip2(down1) # (B, 16, 48, 64)
+        up4 = self.up4(up3) + self.skip1(down1) # (B, 16, 96, 128)
+
+        # up1 = self.up1(down3) # (B, 32, 24, 32)
+        # up2 = self.up2(up1) # (B, 16, 48, 64)
+        # up3 = self.up3(up2) # (B, 16, 96, 128)
 
         # Segmentation head
-        segmentation_out = self.segmentation_head(up3) # (B, num_classes, 96, 128)
+        segmentation_out = self.segmentation_head(up4) # (B, num_classes, 96, 128)
 
         # Depth head
-        depth_out = self.depth_head(up3) # (B, 1, 96, 128)
+        depth_out = self.depth_head(up4) # (B, 1, 96, 128)
 
 
         return segmentation_out, depth_out
