@@ -184,13 +184,17 @@ class Detector(torch.nn.Module):
         """
         # optional: normalizes the input
         z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None] # (B, 3, 96, 128)
+        print("Shape after z:", z.shape)
 
         # Downsample (encoder)
         down1 = self.down1(z) # (B, 16, 48, 64)
+        print("Shape after down1:", down1.shape)
         down2 = self.down2(down1) # (B, 32, 24, 32)
+        print("Shape after down2:", down2.shape)
         down3 = self.down3(down2) # (B, 64, 12, 16)
+        print("Shape after down3:", down3.shape)
         down4 = self.down4(down3) # (B, 128, 6, 8)
-        print(down4.shape)
+        print("Shape after down4:", down4.shape)
 
         # Upsample (decoder)
         up1 = self.up1(down4) + self.skip4(down3) # (B, 64, 12, 16)
