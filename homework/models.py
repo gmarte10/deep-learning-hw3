@@ -148,7 +148,7 @@ class Detector(torch.nn.Module):
         self.down1 = self.DownBlock(in_channels, 16) # Output: (B, 16, 48, 64)
         self.down2 = self.DownBlock(16, 32) # Output: (B, 32, 24, 32)
         self.down3 = self.DownBlock(32, 64) # Output: (B, 64, 12, 16)
-        self.donw4 = self.DownBlock(64, 128) # Output: (B, 128, 6, 8)
+        self.down4 = self.DownBlock(64, 128) # Output: (B, 128, 6, 8)
 
         # Upsampling path (decoder)
         self.up1 = self.UpBlock(128, 64) # Output: (B, 64, 12, 16)
