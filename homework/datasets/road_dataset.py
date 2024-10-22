@@ -43,7 +43,6 @@ class RoadDataset(Dataset):
             # TODO: construct your custom augmentation
             xform = road_transforms.Compose(
                 [
-                    road_transforms.RandomHorizontalFlip(p=0.5),
                     road_transforms.ImageLoader(self.episode_path),
                     road_transforms.DepthLoader(self.episode_path),
                     road_transforms.TrackProcessor(self.track),
