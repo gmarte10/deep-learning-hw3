@@ -198,9 +198,13 @@ class Detector(torch.nn.Module):
 
         # Upsample (decoder)
         up1 = self.up1(down4) + self.skip4(down3) # (B, 64, 12, 16)
+        print("Shape after up1:", up1.shape)
         up2 = self.up2(up1) + self.skip3(down2) # (B, 32, 24, 32)
+        print("Shape after up2:", up2.shape)
         up3 = self.up3(up2) + self.skip2(down1) # (B, 16, 48, 64)
+        print("Shape after up3:", up3.shape)
         up4 = self.up4(up3) + self.skip1(down1) # (B, 16, 96, 128)
+        print("Shape after up4:", up4.shape)
 
         # up1 = self.up1(down3) # (B, 32, 24, 32)
         # up2 = self.up2(up1) # (B, 16, 48, 64)
@@ -208,9 +212,11 @@ class Detector(torch.nn.Module):
 
         # Segmentation head
         segmentation_out = self.segmentation_head(up4) # (B, num_classes, 96, 128)
+        print("Shape after segmentation_out:", segmentation_out.shape)
 
         # Depth head
         depth_out = self.depth_head(up4) # (B, 1, 96, 128)
+        print("Shape after depth_out:", depth_out.shape)
 
 
         return segmentation_out, depth_out
