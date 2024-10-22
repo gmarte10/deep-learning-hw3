@@ -124,7 +124,7 @@ class Detector(torch.nn.Module):
 
         def forward(self, x):
             x = self.relu(self.bn1(self.ct1(x)))
-            x = self
+            x = self.dropout(x)
             return x
 
         # def forward(self, x, skip_connection=None):
