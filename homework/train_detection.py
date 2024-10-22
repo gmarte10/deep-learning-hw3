@@ -70,6 +70,8 @@ def train_detection(
         # Reset metrics
         train_metrics.reset()
 
+        total_train_loss = 0
+
         for batch in train_data:
             # Put img and label on GPU
             img = batch["image"].to(device)
@@ -90,8 +92,8 @@ def train_detection(
             seg_loss = segmentation_loss(segmentation_pred, segmentation)
             d_loss = depth_loss(depth_pred, depth)
 
-            total_loss = seg_loss + d_loss
-            total_loss.backward()
+            total_train_loss = seg_loss + d_loss
+            total_train_loss.backward()
             optimizer.step()
 
             _, seg_pred = torch.max(segmentation_pred, 1)
@@ -106,11 +108,11 @@ def train_detection(
         # Store the training accuracy
         # Compute epoch-wide metrics for training
         train_epoch_metrics = train_metrics.compute()
-        metrics["train"]["total_loss"].append(total_loss.item())
+        metrics["train"]["total_loss"].append(total_train_loss.item())
         metrics["train"]["iou"].append(train_epoch_metrics["iou"])
         metrics["train"]["abs_depth_error"].append(train_epoch_metrics["abs_depth_error"])
 
-        logger.add_scalar("train/total_loss", total_loss.item(), global_step)
+        logger.add_scalar("train/total_loss", total_train_loss.item(), global_step)
         logger.add_scalar("train/iou", train_epoch_metrics["iou"], global_step)
         logger.add_scalar("train/abs_depth_error", train_epoch_metrics["abs_depth_error"], global_step)
         
@@ -118,7 +120,9 @@ def train_detection(
         val_metrics = DetectionMetric()
         # Disable gradient compution and switch to evaluation mode
         with torch.inference_mode():
+            total_val_loss = 0
             for batch in val_data:
+                val_metrics.reset()
                 # Put img and label on GPU
                 img = batch["image"].to(device)
                 depth = batch["depth"].to(device)
@@ -126,12 +130,13 @@ def train_detection(
 
                 # Predict image label
                 segmentation_pred, depth_pred = model(img)
+                depth_pred = depth_pred.squeeze(1)
 
                 # Compute loss value
                 seg_loss = segmentation_loss(segmentation_pred, segmentation)
-                d_loss = depth_loss(depth_pred.squeeze(1), depth)
+                d_loss = depth_loss(depth_pred, depth)
 
-                total_loss = seg_loss + d_loss
+                total_val_loss = seg_loss + d_loss
 
                 _, seg_pred = torch.max(segmentation_pred, 1)
                 # depth_pred = depth_pred.squeeze(1)
@@ -139,11 +144,12 @@ def train_detection(
                 val_metrics.add(seg_pred, segmentation, depth_pred, depth)
 
             val_epoch_metrics = val_metrics.compute()
-            metrics["val"]["total_loss"].append(total_loss.item())
+            avg_val_loss = total_val_loss / len(val_data)
+            metrics["val"]["total_loss"].append(avg_val_loss.item())
             metrics["val"]["iou"].append(val_epoch_metrics["iou"])
             metrics["val"]["abs_depth_error"].append(val_epoch_metrics["abs_depth_error"])
 
-            logger.add_scalar("val/total_loss", total_loss.item(), global_step)
+            logger.add_scalar("val/total_loss", avg_val_loss.item(), global_step)
             logger.add_scalar("val/iou", val_epoch_metrics["iou"], global_step)
             logger.add_scalar("val/abs_depth_error", val_epoch_metrics["abs_depth_error"], global_step)
         
