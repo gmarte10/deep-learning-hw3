@@ -166,7 +166,7 @@ class Detector(torch.nn.Module):
         self.skip1 = torch.nn.Conv2d(16, 16, kernel_size=1)
         self.skip2 = torch.nn.Conv2d(32, 32, kernel_size=1)
         self.skip3 = torch.nn.Conv2d(64, 64, kernel_size=1)
-        self.skip4 = torch.nn.Conv2d(128, 128, kernel_size=1)
+        # self.skip4 = torch.nn.Conv2d(128, 128, kernel_size=1)
 
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
@@ -197,13 +197,13 @@ class Detector(torch.nn.Module):
         print("Shape after down4:", down4.shape)
 
         # Upsample (decoder)
-        up1 = self.up1(down4) + self.skip4(down3) # (B, 64, 12, 16)
+        up1 = self.up1(down4) + self.skip3(down3) # (B, 64, 12, 16)
         print("Shape after up1:", up1.shape)
-        up2 = self.up2(up1) + self.skip3(down2) # (B, 32, 24, 32)
+        up2 = self.up2(up1) + self.skip2(down2) # (B, 32, 24, 32)
         print("Shape after up2:", up2.shape)
-        up3 = self.up3(up2) + self.skip2(down1) # (B, 16, 48, 64)
+        up3 = self.up3(up2) + self.skip1(down1) # (B, 16, 48, 64)
         print("Shape after up3:", up3.shape)
-        up4 = self.up4(up3) + self.skip1(down1) # (B, 16, 96, 128)
+        up4 = self.up4(up3) # (B, 16, 96, 128)
         print("Shape after up4:", up4.shape)
 
         # up1 = self.up1(down3) # (B, 32, 24, 32)
