@@ -101,6 +101,29 @@ class Classifier(nn.Module):
 
 class Detector(torch.nn.Module):
 
+    class DonwBlock(torch.nn.Module):
+        def __init__(self, in_channels, out_channels):
+            super().__init__()
+            self.c1 = torch.nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1)
+            self.bn1 = torch.nn.BatchNorm2d(out_channels)
+            self.relu = torch.nn.ReLU()
+
+        def forward(self, x):
+            return self.relu(self.bn1(self.c1(x)))
+        
+    class UpBlock(torch.nn.Module):
+        def __init__(self, in_channels, out_channels):
+            super().__init__()
+            self.ct1 = torch.nn.ConvTranspose2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, output_padding=1)
+            self.bn1 = torch.nn.BatchNorm2d(out_channels)
+            self.relu = torch.nn.ReLU()
+
+        def forward(self, x, skip_connection=None):
+            x = self.relu(self.bn1(self.ct1(x)))
+            if skip_connection is not None:
+                x = x + skip_connection
+            return x
+
     def __init__(
         self,
         in_channels: int = 3,
@@ -119,12 +142,14 @@ class Detector(torch.nn.Module):
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
         
         # Downsampling path (encoder)
-        self.down1 = torch.nn.Conv2d(in_channels, 16, kernel_size=3, stride=2, padding=1) # Output: (B, 16, 48, 64)
-        self.down2 = torch.nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1) # Output: (B, 32, 24, 32)
+        self.down1 = self.DownBlock(in_channels, 16) # Output: (B, 16, 48, 64)
+        self.down2 = self.DownBlock(16, 32) # Output: (B, 32, 24, 32)
+        self.down3 = self.DownBlock(32, 64) # Output: (B, 64, 12, 16)
 
         # Upsampling path (decoder)
-        self.up1 = torch.nn.ConvTranspose2d(32, 16, kernel_size=3, stride=2, padding=1, output_padding=1) # Output: (B, 16, 48, 64)
-        self.up2 = torch.nn.ConvTranspose2d(16, 16, kernel_size=3, stride=2, padding=1, output_padding=1) # Output: (B, 16, 96, 128)
+        self.up1 = self.UpBlock(64, 32) # Output: (B, 32, 24, 32)
+        self.up2 = self.UpBlock(32, 16) # Output: (B, 16, 48, 64)
+        self.up3 = self.UpBlock(16, 16) # Output: (B, 16, 96, 128)
 
         # Segmentation head
         self.segmentation_head = torch.nn.Conv2d(16, num_classes, kernel_size=1) # Output: (B, num_classes, 96, 128)

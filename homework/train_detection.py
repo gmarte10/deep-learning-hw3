@@ -14,8 +14,8 @@ def train_detection(
         model_name: str = "detector",
         num_epoch: int = 50,
         # Learning rate for the optimizer
-        lr: float = 0.001,
-        batch_size: int = 16,
+        lr: float = 0.0001,
+        batch_size: int = 64,
         # Random seed for reproducibility
         seed: int = 2024,
         # Additional keyword arguments to pass to the model (optimizer, decay, etc.)
@@ -62,6 +62,7 @@ def train_detection(
     # detection_metric = DetectionMetric()
     # d_metric = {"training":[], "validation": []}
     train_metrics = DetectionMetric()
+    val_metrics = DetectionMetric()
 
     for epoch in range(num_epoch):
         # Set model to training mode
@@ -117,12 +118,11 @@ def train_detection(
         logger.add_scalar("train/abs_depth_error", train_epoch_metrics["abs_depth_error"], global_step)
         
         model.eval()
-        val_metrics = DetectionMetric()
         # Disable gradient compution and switch to evaluation mode
         with torch.inference_mode():
+            val_metrics.reset()
             total_val_loss = 0
             for batch in val_data:
-                val_metrics.reset()
                 # Put img and label on GPU
                 img = batch["image"].to(device)
                 depth = batch["depth"].to(device)
