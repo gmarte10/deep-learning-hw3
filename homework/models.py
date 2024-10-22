@@ -160,6 +160,7 @@ class Detector(torch.nn.Module):
         # Skip connections
         self.skip1 = torch.nn.Conv2d(16, 16, kernel_size=1)
         self.skip2 = torch.nn.Conv2d(32, 16, kernel_size=1)
+        self.skip3 = torch.nn.Conv2d(64, 16, kernel_size=1)
 
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
@@ -179,16 +180,17 @@ class Detector(torch.nn.Module):
         z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None] # (B, 3, 96, 128)
 
         # Downsample (encoder)
-        down1 = torch.nn.functional.relu(self.down1(z)) # (B, 16, 48, 64)
-        down2 = torch.nn.functional.relu(self.down2(down1)) # (B, 32, 24, 32)
+        down1 = self.down1(z) # (B, 16, 48, 64)
+        down2 = self.down2(down1) # (B, 32, 24, 32)
+        down3 = self.down3(down2) # (B, 64, 12, 16)
 
         # Upsample (decoder)
-        up1 = torch.nn.functional.relu(self.up1(down2)) # (B, 16, 48, 64)
-        up1 = up1 + self.skip1(down1) # skip from down1
-        up2 = torch.nn.functional.relu(self.up2(up1)) # (B, 16, 96, 128)
+        up1 = self.up1(down3, self.skip1(down2)) # (B, 32, 24, 32)
+        up2 = self.up2(up1, self.skip2(down1)) # (B, 16, 48, 64)
+        up3 = self.up3(up2, self.skip3(z)) # (B, 16, 96, 128)
 
         # Segmentation head
-        segmentation_out = self.segmentation_head(up2) # (B, num_classes, 96, 128)
+        segmentation_out = self.segmentation_head(up3) # (B, num_classes, 96, 128)
 
         # Depth head
         depth_out = self.depth_head(up2) # (B, 1, 96, 128)
