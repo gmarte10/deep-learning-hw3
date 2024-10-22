@@ -46,7 +46,7 @@ class RoadDataset(Dataset):
                     road_transforms.ImageLoader(self.episode_path),
                     road_transforms.DepthLoader(self.episode_path),
                     road_transforms.TrackProcessor(self.track),
-                    road_transforms.RandomHorizontalFlip(self.episode_path, p=0.5),
+                    road_transforms.RandomHorizontalFlip(p=0.5),
                 ]
             )
 
