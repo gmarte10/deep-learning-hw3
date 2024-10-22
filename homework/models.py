@@ -101,7 +101,7 @@ class Classifier(nn.Module):
 
 class Detector(torch.nn.Module):
 
-    class DonwBlock(torch.nn.Module):
+    class DownBlock(torch.nn.Module):
         def __init__(self, in_channels, out_channels):
             super().__init__()
             self.c1 = torch.nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1)
