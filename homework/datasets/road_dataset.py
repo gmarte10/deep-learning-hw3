@@ -36,6 +36,7 @@ class RoadDataset(Dataset):
                     road_transforms.ImageLoader(self.episode_path),
                     road_transforms.DepthLoader(self.episode_path),
                     road_transforms.TrackProcessor(self.track),
+                    
                 ]
             )
         elif transform_pipeline == "aug":
@@ -45,7 +46,7 @@ class RoadDataset(Dataset):
                     road_transforms.ImageLoader(self.episode_path),
                     road_transforms.DepthLoader(self.episode_path),
                     road_transforms.TrackProcessor(self.track),
-                    road_transforms.RandomHorizontalFlip(),
+                    road_transforms.RandomHorizontalFlip(self.episode_path),
                 ]
             )
 
