@@ -117,12 +117,14 @@ class Detector(torch.nn.Module):
             self.ct1 = torch.nn.ConvTranspose2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, output_padding=1)
             self.bn1 = torch.nn.BatchNorm2d(out_channels)
             self.relu = torch.nn.ReLU()
+        def forward(self, x):
+            return self.relu(self.bn1(self.ct1(x)))
 
-        def forward(self, x, skip_connection=None):
-            x = self.relu(self.bn1(self.ct1(x)))
-            if skip_connection is not None:
-                x = x + skip_connection
-            return x
+        # def forward(self, x, skip_connection=None):
+        #     x = self.relu(self.bn1(self.ct1(x)))
+        #     if skip_connection is not None:
+        #         x = x + skip_connection
+        #     return x
 
     def __init__(
         self,
@@ -157,10 +159,10 @@ class Detector(torch.nn.Module):
         # Depth head
         self.depth_head = torch.nn.Conv2d(16, 1, kernel_size=1) # Output: (B, 1, 96, 128)
 
-        # Skip connections
-        self.skip1 = torch.nn.Conv2d(16, 16, kernel_size=1)
-        self.skip2 = torch.nn.Conv2d(32, 16, kernel_size=1)
-        self.skip3 = torch.nn.Conv2d(64, 32, kernel_size=1)
+        # # Skip connections
+        # self.skip1 = torch.nn.Conv2d(16, 16, kernel_size=1)
+        # self.skip2 = torch.nn.Conv2d(32, 16, kernel_size=1)
+        # self.skip3 = torch.nn.Conv2d(64, 32, kernel_size=1)
 
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
@@ -185,9 +187,9 @@ class Detector(torch.nn.Module):
         down3 = self.down3(down2) # (B, 64, 12, 16)
 
         # Upsample (decoder)
-        up1 = self.up1(down3, self.skip3(down2)) # (B, 32, 24, 32)
-        up2 = self.up2(up1, self.skip2(down2)) # (B, 16, 48, 64)
-        up3 = self.up3(up2, self.skip1(down1)) # (B, 16, 96, 128)
+        up1 = self.up1(down3) # (B, 32, 24, 32)
+        up2 = self.up2(up1) # (B, 16, 48, 64)
+        up3 = self.up3(up2) # (B, 16, 96, 128)
 
         # Segmentation head
         segmentation_out = self.segmentation_head(up3) # (B, num_classes, 96, 128)
