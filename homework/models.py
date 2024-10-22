@@ -110,8 +110,9 @@ class Detector(torch.nn.Module):
             self.dropout = torch.nn.Dropout(0.3)
 
         def forward(self, x):
+            x = self.relu(self.bn1(self.c1(x)))
             x = self.dropout(x)
-            return self.relu(self.bn1(self.c1(x)))
+            return x
         
     class UpBlock(torch.nn.Module):
         def __init__(self, in_channels, out_channels):
@@ -122,8 +123,9 @@ class Detector(torch.nn.Module):
             self.dropout = torch.nn.Dropout(0.3)
 
         def forward(self, x):
-            x = self.dropout(x)
-            return self.relu(self.bn1(self.ct1(x)))
+            x = self.relu(self.bn1(self.ct1(x)))
+            x = self
+            return x
 
         # def forward(self, x, skip_connection=None):
         #     x = self.relu(self.bn1(self.ct1(x)))
