@@ -47,7 +47,7 @@ def train_detection(
 
     # Create loss function and optimizer; can add momentum, weight decay, etc.
     segmentation_loss = torch.nn.CrossEntropyLoss()
-    depth_loss = torch.nn.MSELoss()
+    depth_loss = torch.nn.L1Loss()
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
     # Metrics storage
