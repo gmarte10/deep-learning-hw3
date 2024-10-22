@@ -184,27 +184,27 @@ class Detector(torch.nn.Module):
         """
         # optional: normalizes the input
         z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None] # (B, 3, 96, 128)
-        print("Shape after z:", z.shape)
+        # print("Shape after z:", z.shape)
 
         # Downsample (encoder)
         down1 = self.down1(z) # (B, 16, 48, 64)
-        print("Shape after down1:", down1.shape)
+        # print("Shape after down1:", down1.shape)
         down2 = self.down2(down1) # (B, 32, 24, 32)
-        print("Shape after down2:", down2.shape)
+        # print("Shape after down2:", down2.shape)
         down3 = self.down3(down2) # (B, 64, 12, 16)
-        print("Shape after down3:", down3.shape)
+        # print("Shape after down3:", down3.shape)
         down4 = self.down4(down3) # (B, 128, 6, 8)
-        print("Shape after down4:", down4.shape)
+        # print("Shape after down4:", down4.shape)
 
         # Upsample (decoder)
         up1 = self.up1(down4) + self.skip3(down3) # (B, 64, 12, 16)
-        print("Shape after up1:", up1.shape)
+        # print("Shape after up1:", up1.shape)
         up2 = self.up2(up1) + self.skip2(down2) # (B, 32, 24, 32)
-        print("Shape after up2:", up2.shape)
+        # print("Shape after up2:", up2.shape)
         up3 = self.up3(up2) + self.skip1(down1) # (B, 16, 48, 64)
-        print("Shape after up3:", up3.shape)
+        # print("Shape after up3:", up3.shape)
         up4 = self.up4(up3) # (B, 16, 96, 128)
-        print("Shape after up4:", up4.shape)
+        # print("Shape after up4:", up4.shape)
 
         # up1 = self.up1(down3) # (B, 32, 24, 32)
         # up2 = self.up2(up1) # (B, 16, 48, 64)
@@ -212,11 +212,11 @@ class Detector(torch.nn.Module):
 
         # Segmentation head
         segmentation_out = self.segmentation_head(up4) # (B, num_classes, 96, 128)
-        print("Shape after segmentation_out:", segmentation_out.shape)
+        # print("Shape after segmentation_out:", segmentation_out.shape)
 
         # Depth head
         depth_out = self.depth_head(up4) # (B, 1, 96, 128)
-        print("Shape after depth_out:", depth_out.shape)
+        # print("Shape after depth_out:", depth_out.shape)
 
 
         return segmentation_out, depth_out
