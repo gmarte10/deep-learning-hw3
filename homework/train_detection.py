@@ -136,7 +136,7 @@ def train_detection(
                 seg_loss = segmentation_loss(segmentation_pred, segmentation)
                 d_loss = depth_loss(depth_pred, depth)
 
-                total_train_loss = total_train_loss + seg_loss + d_loss
+                total_val_loss = total_val_loss + seg_loss + d_loss
 
                 _, seg_pred = torch.max(segmentation_pred, 1)
                 # depth_pred = depth_pred.squeeze(1)
