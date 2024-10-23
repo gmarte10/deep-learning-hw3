@@ -29,7 +29,7 @@ class Classifier(nn.Module):
         
 
         # AI: Recommended to add skip aconnection before relu because I had it after in the return statement
-        # AI: It told me to add dropout and how much because I was having issues with my validation accuracy
+        # AI: It told me to use the self dropout here
         def forward(self, x):
             res = self.skip(x)
             x = self.relu(self.bn1(self.c1(x)))
@@ -152,7 +152,8 @@ class Detector(torch.nn.Module):
 
         self.register_buffer("input_mean", torch.as_tensor(INPUT_MEAN))
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
-        
+
+        # AI: Helped comment the output size after each block was called
         # AI: Recommended me to increase the in channels
         # Downsampling path (encoder)
         self.down1 = self.DownBlock(in_channels, 32) # Output: (B, 32, 48, 64)
@@ -200,6 +201,7 @@ class Detector(torch.nn.Module):
         # optional: normalizes the input
         z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None] # (B, 3, 96, 128)
         
+        # AI: Helped comment the output size after each block was called
         # Downsample (encoder)
         down1 = self.down1(z) # Output: (B, 32, 48, 64)
         down2 = self.down2(down1) # Output: (B, 64, 24, 32)

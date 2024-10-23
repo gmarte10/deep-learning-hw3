@@ -36,7 +36,7 @@ class SuperTuxDataset(Dataset):
             xform = transforms.ToTensor()
         elif transform_pipeline == "aug":
             # TODO: construct your custom augmentation
-            # AI: Recommended me to add random rotation and color jitter
+            # AI: Recommended me to add random rotation and color jitter to improve my validation accuracy
             xform = transforms.Compose(
                 [
                     transforms.RandomResizedCrop(size=(64, 64), antialias=True),
