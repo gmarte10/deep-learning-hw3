@@ -14,8 +14,8 @@ def train_detection(
         model_name: str = "detector",
         num_epoch: int = 50,
         # Learning rate for the optimizer
-        lr: float = 0.001,
-        batch_size: int = 64,
+        lr: float = 0.0001,
+        batch_size: int = 32,
         # Random seed for reproducibility
         seed: int = 2024,
         # Additional keyword arguments to pass to the model (optimizer, decay, etc.)
@@ -49,7 +49,7 @@ def train_detection(
     segmentation_loss = torch.nn.CrossEntropyLoss()
     depth_loss = torch.nn.L1Loss()
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     # Metrics storage
     metrics = {
         "train": {"total_loss": [], "iou": [], "abs_depth_error": []},
@@ -93,7 +93,7 @@ def train_detection(
             seg_loss = segmentation_loss(segmentation_pred, segmentation)
             d_loss = depth_loss(depth_pred, depth)
 
-            total_train_loss = total_train_loss + seg_loss + d_loss
+            total_train_loss = seg_loss + d_loss
             total_train_loss.backward()
             optimizer.step()
 
@@ -136,7 +136,7 @@ def train_detection(
                 seg_loss = segmentation_loss(segmentation_pred, segmentation)
                 d_loss = depth_loss(depth_pred, depth)
 
-                total_val_loss = total_val_loss + seg_loss + d_loss
+                total_val_loss = seg_loss + d_loss
 
                 _, seg_pred = torch.max(segmentation_pred, 1)
                 # depth_pred = depth_pred.squeeze(1)

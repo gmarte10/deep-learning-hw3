@@ -110,12 +110,12 @@ class Detector(torch.nn.Module):
             # self.c2 = torch.nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
             # self.bn2 = torch.nn.BatchNorm2d(out_channels)
             # self.relu2 = torch.nn.ReLU()
-            self.dropout = torch.nn.Dropout(0.1)
+            # self.dropout = torch.nn.Dropout(0.1)
 
         def forward(self, x):
             x = self.relu1(self.bn1(self.c1(x)))
             # x = self.relu2(self.bn2(self.c2(x)))
-            x = self.dropout(x)
+            # x = self.dropout(x)
             return x
         
     class UpBlock(torch.nn.Module):
@@ -127,12 +127,12 @@ class Detector(torch.nn.Module):
             # self.c2 = torch.nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
             # self.bn2 = torch.nn.BatchNorm2d(out_channels)
             # self.relu2 = torch.nn.ReLU()
-            self.dropout = torch.nn.Dropout(0.1)
+            # self.dropout = torch.nn.Dropout(0.1)
 
         def forward(self, x):
             x = self.relu1(self.bn1(self.ct1(x)))
             # x = self.relu2(self.bn2(self.c2(x)))
-            x = self.dropout(x)
+            # x = self.dropout(x)
             return x
 
         # def forward(self, x, skip_connection=None):
