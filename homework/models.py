@@ -25,7 +25,7 @@ class Classifier(nn.Module):
             self.bn2 = torch.nn.BatchNorm2d(out_channels)
             self.relu = torch.nn.ReLU()
             self.skip = torch.nn.Conv2d(in_channels, out_channels, 1, stride, 0) if in_channels != out_channels else torch.nn.Identity()
-            self.dropout = torch.nn.Dropout(0.4)
+            self.dropout = torch.nn.Dropout(0.1)
         
 
         # AI: Recommended to add skip aconnection before relu because I had it after in the return statement
