@@ -23,6 +23,7 @@ class Classifier(nn.Module):
             self.skip = torch.nn.Conv2d(in_channels, out_channels, 1, stride, 0) if in_channels != out_channels else torch.nn.Identity()
             self.dropout = torch.nn.Dropout(0.3) # AI, Didn't have dropout before
         
+
         def forward(self, x):
             res = self.skip(x) # AI, had it in return statement before
             x = self.relu(self.bn1(self.c1(x)))
@@ -30,7 +31,7 @@ class Classifier(nn.Module):
             x = self.dropout(x) # AI, Didn't have dropout before
             return self.relu(x + res)
         
-    
+
     def __init__(
         self,
         in_channels: int = 3,
@@ -48,22 +49,24 @@ class Classifier(nn.Module):
         self.register_buffer("input_mean", torch.as_tensor(INPUT_MEAN))
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
 
-        # TODO: implement - saving
         channels_l0 = 96
         n_blocks = 3
-
+        
         cnn_layers = [
             torch.nn.Conv2d(in_channels, channels_l0, kernel_size=7, stride=2, padding=3),
             torch.nn.BatchNorm2d(channels_l0),
             torch.nn.ReLU(),
         ]
+
         c1 = channels_l0
         for _ in range(n_blocks):
             c2 = c1 * 2
             cnn_layers.append(self.Block(c1, c2, stride=2))
             c1 = c2
+
         cnn_layers.append(torch.nn.Conv2d(c1, num_classes, kernel_size=1))
         self.cnn = torch.nn.Sequential(*cnn_layers)
+
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -76,13 +79,10 @@ class Classifier(nn.Module):
         # optional: normalizes the input
         z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None]
 
-        # TODO: replace with actual forward pass
         out = self.cnn(z)
         out = out.view(out.size(0), -1)
         return out
-        # logits = torch.randn(x.size(0), 6)
 
-        # return logits
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -108,10 +108,12 @@ class Detector(torch.nn.Module):
             self.bn1 = torch.nn.BatchNorm2d(out_channels)
             self.relu1 = torch.nn.ReLU()
 
+
         def forward(self, x):
             x = self.relu1(self.bn1(self.c1(x)))
             return x
         
+
     class UpBlock(torch.nn.Module):
         def __init__(self, in_channels, out_channels):
             super().__init__()
@@ -119,9 +121,11 @@ class Detector(torch.nn.Module):
             self.bn1 = torch.nn.BatchNorm2d(out_channels)
             self.relu1 = torch.nn.ReLU()
 
+
         def forward(self, x):
             x = self.relu1(self.bn1(self.ct1(x)))
             return x
+
 
     def __init__(
         self,
