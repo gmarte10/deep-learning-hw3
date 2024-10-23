@@ -50,7 +50,7 @@ def train_classification(
     # AI: Used to figure out what weight decay to use and how to use it
     # Create loss function and optimizer
     loss_func = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
 
     # Used to for tracking; keeps track of the x axis in tensorboard plot
     global_step = 0
