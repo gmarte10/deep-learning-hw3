@@ -50,7 +50,7 @@ def train_detection(
     # Create loss functions and optimizer
     segmentation_loss = torch.nn.CrossEntropyLoss()
     depth_loss = torch.nn.L1Loss()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.001)
 
     # AI: Simplified the way I was storing metrics by making one dictionary instead of multiple
     # Metrics storage
@@ -104,7 +104,7 @@ def train_detection(
             # Backpropagation
             total_train_loss.backward()
             optimizer.step()
-            
+
             _, seg_pred = torch.max(segmentation_pred, 1)
 
             # Add metrics for current batch
