@@ -51,6 +51,7 @@ def train_detection(
     depth_loss = torch.nn.L1Loss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
+    # AI: Simplified the way I was storing metrics by making one dictionary instead of multiple
     # Metrics storage
     metrics = {
         "train": {"total_loss": [], "iou": [], "abs_depth_error": [], "tp_depth_error":[], "total_seg_loss": [], "total_depth_loss": []},
@@ -91,6 +92,7 @@ def train_detection(
             seg_loss = segmentation_loss(segmentation_pred, segmentation)
             d_loss = depth_loss(depth_pred, depth)
 
+            # AI: Showed me how to correctly combine the losses
             # Track loss and relevant metrics
             total_train_loss = seg_loss + d_loss
             total_seg_loss += seg_loss
