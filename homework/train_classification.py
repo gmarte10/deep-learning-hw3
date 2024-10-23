@@ -45,25 +45,26 @@ def train_classification(
     train_data = load_data("classification_data/train", transform_pipeline = "aug", shuffle=True, batch_size=batch_size, num_workers=2)
     val_data=load_data("classification_data/val", shuffle=False, num_workers=2)
 
-    # Create loss function and optimizer; can add momentum, weight decay, etc.
+    # Create loss function and optimizer
     loss_func = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
 
-    # Used to keep track of the x axis in tensorboard plot
+    # Used to for tracking; keeps track of the x axis in tensorboard plot
     global_step = 0
+
     # Store the training and validation accuracy
     acc_storage = {"train_accuracy": [], "validation_accuracy": []}
+
+    # Used to create accuracy
     acc_metric = AccuracyMetric()
 
     for epoch in range(num_epoch):
         # Set model to training mode
         model.train()
 
-        # Clear metrics storage at the start of each epoch
+        # Reset metrics
         for key in acc_storage:
             acc_storage[key].clear()
-
-        # Reset metrics
         acc_metric.reset()
 
         for img, label in train_data:
@@ -81,7 +82,7 @@ def train_classification(
             loss_val.backward()
             optimizer.step()
 
-            # Compute the training accuracy and store it
+            # Add metrics
             _, predicted = torch.max(pred, 1)
             acc_metric.add(predicted, label)
 
@@ -90,33 +91,40 @@ def train_classification(
         # Store the training accuracy
         acc_storage["train_accuracy"].append(acc_metric.compute())
         
+        # Disable gradient compution and switch to evaluation mode
         model.eval()
         acc_metric.reset()
-        # Disable gradient compution and switch to evaluation mode
         with torch.inference_mode():
             for img, label in val_data:
+                # Put img and label on GPU
                 img, label = img.to(device), label.to(device)
+
+                # Predict image label
                 pred = model(img)
+
                 _, predicted = torch.max(pred, 1)
+
+                # Add metrics
                 acc_metric.add(predicted, label)
+            
+            # Store the validation accuracy
             acc_storage["validation_accuracy"].append(acc_metric.compute())
         
-        # Get the mean training and validation accuracy for the epoch
-        # train_acc_list = [torch.tensor(acc).float() for acc in acc_storage["train_accuracy"]]
-        # val_acc_list = [torch.tensor(acc).float() for acc in acc_storage["validation_accuracy"]]
-
+        # Parse the training accuracy
         train_acc_list = acc_storage["train_accuracy"]
         train_acc_list2 = []
         for acc in train_acc_list:
             a = acc["accuracy"]
             train_acc_list2.append(torch.tensor(a).float())
 
+        # Parse the validation accuracy
         val_acc_list = acc_storage["validation_accuracy"]
         val_acc_list2 = []
         for acc in val_acc_list:
             a = acc["accuracy"]
             val_acc_list2.append(torch.tensor(a).float())
 
+        # Compute the mean of the training and validation accuracy
         epoch_train_acc = torch.as_tensor(train_acc_list2).mean()
         epoch_val_acc = torch.as_tensor(val_acc_list2).mean()
 
