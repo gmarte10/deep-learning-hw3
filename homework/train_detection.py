@@ -41,15 +41,15 @@ def train_detection(
     model = model.to(device)
     model.train()
 
-    # Load the data; can use SuperTuxDataset from classification dataset module to augment data
+    # Load the data; can use RoadDataSet from road dataset module to augment data
     train_data = load_data("road_data/train", shuffle=True, transform_pipeline = "aug", batch_size=batch_size, num_workers=2)
     val_data = load_data("road_data/val", shuffle=False, num_workers=2)
 
-    # Create loss function and optimizer; can add momentum, weight decay, etc.
+    # Create loss functions and optimizer
     segmentation_loss = torch.nn.CrossEntropyLoss()
     depth_loss = torch.nn.L1Loss()
-
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+
     # Metrics storage
     metrics = {
         "train": {"total_loss": [], "iou": [], "abs_depth_error": [], "tp_depth_error":[], "total_seg_loss": [], "total_depth_loss": []},
@@ -58,9 +58,8 @@ def train_detection(
 
     # Used to keep track of the x axis in tensorboard plot
     global_step = 0
-    # Store the training and validation accuracy
-    # detection_metric = DetectionMetric()
-    # d_metric = {"training":[], "validation": []}
+    
+    # Computes iou, abs_depth_error, tp_depth_error
     train_metrics = DetectionMetric()
     val_metrics = DetectionMetric()
 

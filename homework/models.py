@@ -50,7 +50,7 @@ class Classifier(nn.Module):
 
         # TODO: implement - saving
         channels_l0 = 96
-        n_blocks = 3
+        n_blocks = 2
 
         cnn_layers = [
             torch.nn.Conv2d(in_channels, channels_l0, kernel_size=7, stride=2, padding=3),
