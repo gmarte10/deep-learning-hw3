@@ -16,8 +16,8 @@ def train_classification(
         model_name: str = "classification",
         num_epoch: int = 50,
         # Learning rate for the optimizer
-        lr: float = 0.00005,
-        batch_size: int = 128,
+        lr: float = 0.0001,
+        batch_size: int = 64,
         # Random seed for reproducibility
         seed: int = 2024,
         # Additional keyword arguments to pass to the model
