@@ -9,6 +9,7 @@ from .models import load_model, save_model
 from .datasets.road_dataset import load_data
 from .metrics import DetectionMetric
 
+
 def train_detection(
         # Export directory for tensorboard logs and model checkpoints
         exp_dir: str = "logs",
@@ -19,7 +20,7 @@ def train_detection(
         batch_size: int = 32,
         # Random seed for reproducibility
         seed: int = 2024,
-        # Additional keyword arguments to pass to the model (optimizer, decay, etc.)
+        # Additional keyword arguments to pass to the model
         **kwargs,
 ):
     # Use GPU if available
@@ -61,7 +62,7 @@ def train_detection(
     # Used to for tracking; keeps track of the x axis in tensorboard plot
     global_step = 0
     
-    # Computes iou, abs_depth_error, tp_depth_error
+    # Computes IoU, abs_depth_error, tp_depth_error
     train_metrics = DetectionMetric()
     val_metrics = DetectionMetric()
 
@@ -103,14 +104,15 @@ def train_detection(
             # Backpropagation
             total_train_loss.backward()
             optimizer.step()
-
+            
             _, seg_pred = torch.max(segmentation_pred, 1)
 
             # Add metrics for current batch
             train_metrics.add(seg_pred, segmentation, depth_pred, depth)
         
             global_step += 1
-
+        
+        # AI: Showed me where to compute the training metrics 
         # Compute epoch-wide metrics for training
         train_epoch_metrics = train_metrics.compute()
 
@@ -195,6 +197,7 @@ def train_detection(
             logger.add_scalar("val/seg_loss", avg_seg_loss.item(), global_step)
             logger.add_scalar("val/depth_loss", avg_depth_loss.item(), global_step)
 
+        # AI: Showed me the proper formatting for printing the metrics to a certain decimal point
         # Print on first, last and every 10th epoch
         if epoch == 0 or epoch == num_epoch - 1 or (epoch + 1) % 10 == 0:
             print(

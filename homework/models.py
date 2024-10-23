@@ -11,24 +11,30 @@ INPUT_STD = [0.2064, 0.1944, 0.2252]
 class Classifier(nn.Module):
 
     class Block(torch.nn.Module):
+
+        # AI: I was using GroupNorm before and it told me BatchNorm is better
+        # AI: I was only using 1 Conv2d layer before and it told me to use 2
+        # AI: It told me to add dropout and how much because I was having issues with my validation accuracy
         def __init__(self, in_channels, out_channels, stride):
             super().__init__()
             kernel_size = 3
             padding = (kernel_size - 1) // 2
             self.c1 = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
-            self.bn1 = torch.nn.BatchNorm2d(out_channels) # AI, I was using GroupNorm before
+            self.bn1 = torch.nn.BatchNorm2d(out_channels)
             self.c2 = torch.nn.Conv2d(out_channels, out_channels, kernel_size, 1, padding)
             self.bn2 = torch.nn.BatchNorm2d(out_channels)
             self.relu = torch.nn.ReLU()
             self.skip = torch.nn.Conv2d(in_channels, out_channels, 1, stride, 0) if in_channels != out_channels else torch.nn.Identity()
-            self.dropout = torch.nn.Dropout(0.4) # AI, Didn't have dropout before
+            self.dropout = torch.nn.Dropout(0.4)
         
 
+        # AI: Recommended to add skip aconnection before relu because I had it after in the return statement
+        # AI: It told me to add dropout and how much because I was having issues with my validation accuracy
         def forward(self, x):
-            res = self.skip(x) # AI, had it in return statement before
+            res = self.skip(x)
             x = self.relu(self.bn1(self.c1(x)))
             x = self.relu(self.bn2(self.c2(x)))
-            x = self.dropout(x) # AI, Didn't have dropout before
+            x = self.dropout(x)
             return self.relu(x + res)
         
 
@@ -49,10 +55,12 @@ class Classifier(nn.Module):
         self.register_buffer("input_mean", torch.as_tensor(INPUT_MEAN))
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
 
-        channels_l0 = 48
+        # AI: It recommended me to increase the channels to 48 and blocks to 3
+        channels_l0 = 24
         n_blocks = 3
 
         cnn_layers = [
+            # AI: Recommended me to use kernel size of 7
             torch.nn.Conv2d(in_channels, channels_l0, kernel_size=7, stride=2, padding=3),
             torch.nn.BatchNorm2d(channels_l0),
             torch.nn.ReLU(),
@@ -80,6 +88,7 @@ class Classifier(nn.Module):
         z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None]
 
         out = self.cnn(z)
+        # AI: Recommened to use view because I was just directly returning out without doing so, which lead to errors
         out = out.view(out.size(0), -1)
         return out
 

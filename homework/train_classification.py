@@ -2,11 +2,13 @@ import torch
 import argparse
 import torch.utils.tensorboard as tb
 import numpy as np
+
 from pathlib import Path
 from datetime import datetime
 from .models import load_model, save_model
 from .datasets.classification_dataset import load_data, SuperTuxDataset
 from .metrics import AccuracyMetric
+
 
 def train_classification(
         # Export directory for tensorboard logs and model checkpoints
@@ -18,7 +20,7 @@ def train_classification(
         batch_size: int = 128,
         # Random seed for reproducibility
         seed: int = 2024,
-        # Additional keyword arguments to pass to the model (optimizer, decay, etc.)
+        # Additional keyword arguments to pass to the model
         **kwargs,
 ):
     # Use GPU if available
@@ -45,6 +47,7 @@ def train_classification(
     train_data = load_data("classification_data/train", transform_pipeline = "aug", shuffle=True, batch_size=batch_size, num_workers=2)
     val_data=load_data("classification_data/val", shuffle=False, num_workers=2)
 
+    # AI: Used to figure out what weight decay to use and how to use it
     # Create loss function and optimizer
     loss_func = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
@@ -110,6 +113,7 @@ def train_classification(
             # Store the validation accuracy
             acc_storage["validation_accuracy"].append(acc_metric.compute())
         
+        # AI: Used to figure out why I could not access accuracy and how to parse and convert it properly
         # Parse the training accuracy
         train_acc_list = acc_storage["train_accuracy"]
         train_acc_list2 = []
@@ -117,6 +121,7 @@ def train_classification(
             a = acc["accuracy"]
             train_acc_list2.append(torch.tensor(a).float())
 
+        # AI: Used to figure out why I could not access accuracy and how to parse and convert it properly
         # Parse the validation accuracy
         val_acc_list = acc_storage["validation_accuracy"]
         val_acc_list2 = []
