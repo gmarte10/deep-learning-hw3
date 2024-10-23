@@ -55,7 +55,7 @@ class Classifier(nn.Module):
         self.register_buffer("input_mean", torch.as_tensor(INPUT_MEAN))
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
 
-        # AI: It recommended me to increase the channels to 48 and blocks to 3
+        # AI: It recommended me to increase the channels and blocks
         channels_l0 = 24
         n_blocks = 3
 
@@ -121,8 +121,8 @@ class Detector(torch.nn.Module):
         def forward(self, x):
             x = self.relu1(self.bn1(self.c1(x)))
             return x
-        
-
+    
+    # AI: Showed me how to use ConvTranspose2d
     class UpBlock(torch.nn.Module):
         def __init__(self, in_channels, out_channels):
             super().__init__()
@@ -153,6 +153,7 @@ class Detector(torch.nn.Module):
         self.register_buffer("input_mean", torch.as_tensor(INPUT_MEAN))
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
         
+        # AI: Recommended me to increase the in channels
         # Downsampling path (encoder)
         self.down1 = self.DownBlock(in_channels, 32) # Output: (B, 32, 48, 64)
         self.down2 = self.DownBlock(32, 64) # Output: (B, 64, 24, 32)
@@ -160,6 +161,7 @@ class Detector(torch.nn.Module):
         self.down4 = self.DownBlock(128, 256) # Output: (B, 256, 6, 8)
         self.down5 = self.DownBlock(256, 512) # Output: (B, 512, 3, 4)
 
+        # AI: Recommended me to increase the out channels
         # Upsampling path (decoder)
         self.up1 = self.UpBlock(512, 256) # Output: (B, 256, 6, 8)
         self.up2 = self.UpBlock(256, 128) # Output: (B, 128, 12, 16)
@@ -167,12 +169,14 @@ class Detector(torch.nn.Module):
         self.up4 = self.UpBlock(64, 32) # Output: (B, 32, 48, 64)
         self.up5 = self.UpBlock(32, 32) # Output: (B, 32, 96, 128)
 
+        # AI: Showed me how to get the segmentation head and depth head as I didn't know how to do it
         # Segmentation head
         self.segmentation_head = torch.nn.Conv2d(32, num_classes, kernel_size=1) # Output: (B, num_classes, 96, 128)
 
         # Depth head
         self.depth_head = torch.nn.Conv2d(32, 1, kernel_size=1) # Output: (B, 1, 96, 128)
 
+        # AI: Showed me the correct input and output channels to use for skip connections
         # Skip connections
         self.skip1 = torch.nn.Conv2d(32, 32, kernel_size=1)
         self.skip2 = torch.nn.Conv2d(64, 64, kernel_size=1)
@@ -203,6 +207,7 @@ class Detector(torch.nn.Module):
         down4 = self.down4(down3) # Output: (B, 256, 6, 8)
         down5 = self.down5(down4) # Output: (B, 512, 3, 4)
 
+        # AI: I had problems with where to put the right skip connections, it showed me where to put them
         # Upsample (decoder) with skip connections
         up1 = self.up1(down5) + self.skip4(down4) # Output: (B, 256, 6, 8)
         up2 = self.up2(up1) + self.skip3(down3) # Output: (B, 128, 12, 16)
@@ -213,6 +218,7 @@ class Detector(torch.nn.Module):
         # Segmentation head
         segmentation_out = self.segmentation_head(up5) # Output: (B, num_classes, 96, 128)
 
+        # AI: Showed me which up to use for depth head
         # Depth head
         depth_out = self.depth_head(up5) # Output: (B, 1, 96, 128)
         depth_out = depth_out.squeeze(1) # Output: (B, 96, 128)
