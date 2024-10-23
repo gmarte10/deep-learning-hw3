@@ -159,30 +159,30 @@ class Detector(torch.nn.Module):
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
         
         # Downsampling path (encoder)
-        self.down1 = self.DownBlock(in_channels, 16) # Output: (B, 16, 48, 64)
-        self.down2 = self.DownBlock(16, 32) # Output: (B, 32, 24, 32)
-        self.down3 = self.DownBlock(32, 64) # Output: (B, 64, 12, 16)
-        self.down4 = self.DownBlock(64, 128) # Output: (B, 128, 6, 8)
-        self.down5 = self.DownBlock(128, 256) # Output: (B, 256, 3, 4)
+        self.down1 = self.DownBlock(in_channels, 32)     # Output: (B, 32, 48, 64)
+        self.down2 = self.DownBlock(32, 64)              # Output: (B, 64, 24, 32)
+        self.down3 = self.DownBlock(64, 128)             # Output: (B, 128, 12, 16)
+        self.down4 = self.DownBlock(128, 256)            # Output: (B, 256, 6, 8)
+        self.down5 = self.DownBlock(256, 512)            # Output: (B, 512, 3, 4)
 
         # Upsampling path (decoder)
-        self.up1 = self.UpBlock(256, 128) # Output: (B, 128, 6, 8)
-        self.up2 = self.UpBlock(128, 64) # Output: (B, 64, 12, 16)
-        self.up3 = self.UpBlock(64, 32) # Output: (B, 32, 24, 32)
-        self.up4 = self.UpBlock(32, 16) # Output: (B, 16, 48, 64)
-        self.up5 = self.UpBlock(16, 16) # Output: (B, 16, 96, 128)
+        self.up1 = self.UpBlock(512, 256)                # Output: (B, 256, 6, 8)
+        self.up2 = self.UpBlock(256, 128)                # Output: (B, 128, 12, 16)
+        self.up3 = self.UpBlock(128, 64)                 # Output: (B, 64, 24, 32)
+        self.up4 = self.UpBlock(64, 32)                  # Output: (B, 32, 48, 64)
+        self.up5 = self.UpBlock(32, 32)                  # Output: (B, 32, 96, 128)
 
         # Segmentation head
-        self.segmentation_head = torch.nn.Conv2d(16, num_classes, kernel_size=1) # Output: (B, num_classes, 96, 128)
+        self.segmentation_head = torch.nn.Conv2d(32, num_classes, kernel_size=1) # Output: (B, num_classes, 96, 128)
 
         # Depth head
-        self.depth_head = torch.nn.Conv2d(16, 1, kernel_size=1) # Output: (B, 1, 96, 128)
+        self.depth_head = torch.nn.Conv2d(32, 1, kernel_size=1) # Output: (B, 1, 96, 128)
 
-        # Skip connections
-        self.skip1 = torch.nn.Conv2d(16, 16, kernel_size=1)
-        self.skip2 = torch.nn.Conv2d(32, 32, kernel_size=1)
-        self.skip3 = torch.nn.Conv2d(64, 64, kernel_size=1)
-        self.skip4 = torch.nn.Conv2d(128, 128, kernel_size=1)
+        # Skip connections (1x1 convolutions to match dimensions)
+        self.skip1 = torch.nn.Conv2d(32, 32, kernel_size=1)
+        self.skip2 = torch.nn.Conv2d(64, 64, kernel_size=1)
+        self.skip3 = torch.nn.Conv2d(128, 128, kernel_size=1)
+        self.skip4 = torch.nn.Conv2d(256, 256, kernel_size=1)
 
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
@@ -202,27 +202,19 @@ class Detector(torch.nn.Module):
         z = (x - self.input_mean[None, :, None, None]) / self.input_std[None, :, None, None] # (B, 3, 96, 128)
         # print("Shape after z:", z.shape)
 
-        # Downsample (encoder)
-        down1 = self.down1(z) # (B, 16, 48, 64)
-        # print("Shape after down1:", down1.shape)
-        down2 = self.down2(down1) # (B, 32, 24, 32)
-        # print("Shape after down2:", down2.shape)
-        down3 = self.down3(down2) # (B, 64, 12, 16)
-        # print("Shape after down3:", down3.shape)
-        down4 = self.down4(down3) # (B, 128, 6, 8)
-        # print("Shape after down4:", down4.shape)
-        down5 = self.down5(down4) # (B, 256, 3, 4)
+         # Downsample (encoder)
+        down1 = self.down1(z)  # (B, 32, 48, 64)
+        down2 = self.down2(down1)  # (B, 64, 24, 32)
+        down3 = self.down3(down2)  # (B, 128, 12, 16)
+        down4 = self.down4(down3)  # (B, 256, 6, 8)
+        down5 = self.down5(down4)  # (B, 512, 3, 4)
 
-        # Upsample (decoder)
-        up1 = self.up1(down5) + self.skip4(down4) # (B, 128, 6, 8)
-        # print("Shape after up1:", up1.shape)
-        up2 = self.up2(up1) + self.skip3(down3) # (B, 64, 12, 16)
-        # print("Shape after up2:", up2.shape)
-        up3 = self.up3(up2) + self.skip2(down2) # (B, 32, 24, 32)
-        # print("Shape after up3:", up3.shape)
-        up4 = self.up4(up3) + self.skip1(down1) # (B, 16, 48, 64)
-        # print("Shape after up4:", up4.shape)
-        up5 = self.up5(up4) # (B, 16, 96, 128)
+        # Upsample (decoder) with skip connections
+        up1 = self.up1(down5) + self.skip4(down4)  # (B, 256, 6, 8)
+        up2 = self.up2(up1) + self.skip3(down3)  # (B, 128, 12, 16)
+        up3 = self.up3(up2) + self.skip2(down2)  # (B, 64, 24, 32)
+        up4 = self.up4(up3) + self.skip1(down1)  # (B, 32, 48, 64)
+        up5 = self.up5(up4)  # (B, 32, 96, 128)
 
         # up1 = self.up1(down3) # (B, 32, 24, 32)
         # up2 = self.up2(up1) # (B, 16, 48, 64)
