@@ -56,8 +56,8 @@ class Classifier(nn.Module):
         self.register_buffer("input_std", torch.as_tensor(INPUT_STD))
 
         # AI: It recommended me to increase the channels and blocks
-        channels_l0 = 24
-        n_blocks = 3
+        channels_l0 = 12
+        n_blocks = 4
 
         cnn_layers = [
             # AI: Recommended me to use kernel size of 7
