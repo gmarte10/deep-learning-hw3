@@ -227,6 +227,7 @@ class Detector(torch.nn.Module):
         # Depth head
         depth_out = self.depth_head(up5) # (B, 1, 96, 128)
         # print("Shape after depth_out:", depth_out.shape)
+        depth_out = depth_out.squeeze(1) # (B, 96, 128)
 
 
         return segmentation_out, depth_out

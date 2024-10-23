@@ -52,8 +52,8 @@ def train_detection(
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     # Metrics storage
     metrics = {
-        "train": {"total_loss": [], "iou": [], "abs_depth_error": []},
-        "val": {"total_loss": [], "iou": [], "abs_depth_error": []},
+        "train": {"total_loss": [], "iou": [], "abs_depth_error": [], "tp_depth_error":[], "total_seg_loss": [], "total_depth_loss": []},
+        "val": {"total_loss": [], "iou": [], "abs_depth_error": [], "tp_depth_error":[], "total_seg_loss": [], "total_depth_loss": []},
     }
 
     # Used to keep track of the x axis in tensorboard plot
@@ -72,6 +72,11 @@ def train_detection(
         train_metrics.reset()
 
         total_train_loss = 0
+        total_seg_loss = 0
+        seg_len = 0
+        total_depth_loss = 0
+        depth_len = 0
+
 
         for batch in train_data:
             # Put img and label on GPU
@@ -83,7 +88,9 @@ def train_detection(
 
             # Predict image label
             segmentation_pred, depth_pred = model(img)
-            depth_pred = depth_pred.squeeze(1)
+            seg_len += len(segmentation)
+            depth_len += len(depth)
+            # depth_pred = depth_pred.squeeze(1)
 
             # print("Segmentation Pred Shape:", segmentation_pred.shape)
             # print("Depth Pred Shape:", depth_pred.shape)
@@ -94,6 +101,8 @@ def train_detection(
             d_loss = depth_loss(depth_pred, depth)
 
             total_train_loss = seg_loss + d_loss
+            total_seg_loss += seg_loss
+            total_depth_loss += d_loss
             total_train_loss.backward()
             optimizer.step()
 
@@ -109,19 +118,32 @@ def train_detection(
         # Store the training accuracy
         # Compute epoch-wide metrics for training
         train_epoch_metrics = train_metrics.compute()
-        metrics["train"]["total_loss"].append(total_train_loss.item())
+        avg_seg_loss = total_seg_loss / seg_len
+        metrics["train"]["total_seg_loss"].append(avg_seg_loss.item())
+        avg_depth_loss = total_depth_loss / depth_len
+        metrics["train"]["total_depth_loss"].append(avg_depth_loss.item())
+        avg_train_loss = total_train_loss / len(train_data)
+        metrics["train"]["total_loss"].append(avg_train_loss.item())
         metrics["train"]["iou"].append(train_epoch_metrics["iou"])
         metrics["train"]["abs_depth_error"].append(train_epoch_metrics["abs_depth_error"])
+        metrics["train"]["tp_depth_error"].append(train_epoch_metrics["tp_depth_error"])
 
         logger.add_scalar("train/total_loss", total_train_loss.item(), global_step)
         logger.add_scalar("train/iou", train_epoch_metrics["iou"], global_step)
         logger.add_scalar("train/abs_depth_error", train_epoch_metrics["abs_depth_error"], global_step)
+        logger.add_scalar("train/tp_depth_error", train_epoch_metrics["tp_depth_error"], global_step)
+        logger.add_scalar("train/seg_loss", avg_seg_loss.item(), global_step)
+        logger.add_scalar("train/depth_loss", avg_depth_loss.item(), global_step)
         
         model.eval()
         # Disable gradient compution and switch to evaluation mode
         with torch.inference_mode():
             val_metrics.reset()
             total_val_loss = 0
+            total_seg_loss = 0
+            seg_len = 0
+            total_depth_loss = 0
+            depth_len = 0
             for batch in val_data:
                 # Put img and label on GPU
                 img = batch["image"].to(device)
@@ -130,13 +152,17 @@ def train_detection(
 
                 # Predict image label
                 segmentation_pred, depth_pred = model(img)
-                depth_pred = depth_pred.squeeze(1)
+                seg_len += len(segmentation)
+                depth_len += len(depth)
+                # depth_pred = depth_pred.squeeze(1)
 
                 # Compute loss value
                 seg_loss = segmentation_loss(segmentation_pred, segmentation)
                 d_loss = depth_loss(depth_pred, depth)
 
                 total_val_loss = seg_loss + d_loss
+                total_seg_loss += seg_loss
+                total_depth_loss += d_loss
 
                 _, seg_pred = torch.max(segmentation_pred, 1)
                 # depth_pred = depth_pred.squeeze(1)
@@ -144,14 +170,22 @@ def train_detection(
                 val_metrics.add(seg_pred, segmentation, depth_pred, depth)
 
             val_epoch_metrics = val_metrics.compute()
+            avg_seg_loss = total_seg_loss / seg_len
+            metrics["val"]["total_seg_loss"].append(avg_seg_loss.item())
+            avg_depth_loss = total_depth_loss / depth_len
+            metrics["val"]["total_depth_loss"].append(avg_depth_loss.item())
             avg_val_loss = total_val_loss / len(val_data)
             metrics["val"]["total_loss"].append(avg_val_loss.item())
             metrics["val"]["iou"].append(val_epoch_metrics["iou"])
             metrics["val"]["abs_depth_error"].append(val_epoch_metrics["abs_depth_error"])
+            metrics["val"]["tp_depth_error"].append(val_epoch_metrics["tp_depth_error"])
 
             logger.add_scalar("val/total_loss", avg_val_loss.item(), global_step)
             logger.add_scalar("val/iou", val_epoch_metrics["iou"], global_step)
             logger.add_scalar("val/abs_depth_error", val_epoch_metrics["abs_depth_error"], global_step)
+            logger.add_scalar("val/tp_depth_error", val_epoch_metrics["tp_depth_error"], global_step)
+            logger.add_scalar("val/seg_loss", avg_seg_loss.item(), global_step)
+            logger.add_scalar("val/depth_loss", avg_depth_loss.item(), global_step)
         
         
 
